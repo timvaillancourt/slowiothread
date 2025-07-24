@@ -1,0 +1,8 @@
+[
+  {
+    "name": "primary",
+    "listen": "[::]:3306",
+    "upstream": "primary:3306",
+    "enabled": true
+  }
+]
