@@ -23,4 +23,4 @@ done
 
 # Start the row inserter
 echo "Starting row inserter"
-inserter
+row-inserter
