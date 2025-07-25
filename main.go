@@ -18,7 +18,6 @@ var (
 	maxWriters  int    = 4
 	host        string = "primary"
 	port        int    = 3306
-	sleepMillis int    = 0
 	database    string = "test"
 	username    string = "root"
 	password    string
@@ -57,13 +56,12 @@ func main() {
 	flag.StringVar(&password, "password", password, "mysql password")
 	flag.StringVar(&database, "database", database, "mysql database")
 	flag.IntVar(&maxWriters, "writers", maxWriters, "number of writers")
-	flag.IntVar(&sleepMillis, "sleep-millis", sleepMillis, "number of milliseonds to sleep between writes")
 	flag.Int64Var(&maxRows, "max-rows", maxRows, "number of rows to write, 0 == run forever")
 	flag.Parse()
 
+	// get db connection
 	var db *sql.DB
 	var err error
-
 	for {
 		db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
 			username, password, host, port, database,
@@ -80,7 +78,6 @@ func main() {
 		time.Sleep(time.Second)
 		db.Close()
 	}
-
 	defer db.Close()
 
 	var maxRowsPerWorker int64
@@ -92,25 +89,23 @@ func main() {
 	var wg sync.WaitGroup
 	for writers < maxWriters {
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, maxWorkerRows int64, writer int) {
+		writer := writers
+		go func() {
 			defer wg.Done()
 
 			log.Printf("started insert worker %d", writer)
 			var written int64
-			for maxWorkerRows == 0 || written < maxWorkerRows {
+			for maxRowsPerWorker == 0 || written < maxRowsPerWorker {
 				row := newTestRow()
 				if err := row.Insert(db); err != nil {
 					log.Printf("ERROR: could not insert row: %+v", err)
 					continue
 				}
-				if sleepMillis > 0 {
-					time.Sleep(time.Duration(sleepMillis) * time.Millisecond)
-				}
 				written++
 			}
 
 			log.Printf("stopped insert worker %d, wrote %d rows", writer, written)
-		}(&wg, maxRowsPerWorker, writers)
+		}()
 		writers++
 	}
 
