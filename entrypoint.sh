@@ -6,7 +6,7 @@ sleep 5
 # Add network delay from replica -> primary
 # on mysql port
 while true; do
-  http_code=$(curl -w "%{http_code}" -sv -i -d '{
+  http_code=$(curl -w "%{http_code}" -sv -i -H 'Content-Type: application/json' -d '{
 	"name": "slowreplication",
 	"type": "latency",
 	"attributes": {
