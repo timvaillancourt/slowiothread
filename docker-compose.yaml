@@ -25,7 +25,6 @@ services:
     command: -host=0.0.0.0 -config /toxiproxy.json -proxy-metrics
     expose:
       - 3306
-      - 3307
       - 8474
     ports:
       - 8474:8474
